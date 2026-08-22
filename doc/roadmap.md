@@ -63,13 +63,28 @@ KATMAN 2 (klinik doğrulama — makaleye ek değer)
 
 ## Faz 3 — Ön İşleme ve Öznitelik Mühendisliği
 
-- [ ] **N3/N4 birleştirme**: R&K'nin `Sleep stage 3` ve `Sleep stage 4` etiketlerini AASM standardına uygun tek `N3` sınıfında birleştir
-- [ ] Etiketlenmemiş (`NaN`) epoch'ları çıkar
-- [ ] Düşük bilgi değerli sütunları değerlendir (`Temp_rectal_*`, `Event_marker_*`) — tut/çıkar kararı, gerekçeyle
-- [ ] Özellik ölçekleme (StandardScaler / MinMaxScaler) — mesafe/gradyan tabanlı algoritmalar (SVM, KNN, MLP) için gerekli
-- [ ] (Opsiyonel, ileri seviye) Komşu epoch bilgisini ekleme — örn. önceki epoch'un **ham sinyal özellikleri** (etiketi değil!) yeni bir X sütunu olarak eklenebilir; uyku evre geçişleri ardışık olduğu için bu genelde performansı artırır. **Dikkat:** yalnızca sinyal özellikleri eklenmeli, önceki epoch'un `Sleep_stage`'i asla eklenmemeli (leakage)
+- [x] **N3/N4 birleştirme**: R&K'nin `Sleep stage 3` ve `Sleep stage 4` etiketlerini AASM standardına uygun tek `N3` sınıfında birleştir
+  - Çünkü AASM standardı evre 3 ve evre 4'ü ikisini de "yavaş dalga uykusu (derin uyku)" olarak kabul ediyor, ayrı tutmanın klinik/bilimsel bir karşılığı yok. `RAW_TO_AASM` sözlüğünde ikisi de `"N3"`'e eşlendi, sınıf sayısı 6'dan 5'e indi.
+  - Bununla ilgili makale örnekleri bak. Kanıt gerekebilir.
+  
+- [x] Etiketlenmemiş (`NaN`) epoch'ları çıkar
+  - Çünkü etiketi (hedef değişkeni) bilinmeyen bir örnekle model eğitilemez. Kontrol edildi: bu veri setinde hiç NaN yoktu (Faz 1'de kaynağında zaten temizlenmiş), o yüzden 0 satır çıkarıldı — ama kod güvenlik amaçlı kalıcı, ileride tüm 153 kayda geçilirse NaN çıkabilir.
 
-**Çıktı:** Model-hazır `X`, `y`, `groups` (subject_root) matrisleri
+- [x] Düşük bilgi değerli sütunları değerlendir (`Temp_rectal_*`, `Event_marker_*`) — tut/çıkar kararı, gerekçeyle
+  - `Event_marker_*` çıkarıldı, çünkü `Sleep_stage` ile korelasyonu ~0.01 — uyku evresi ne olursa olsun bu değer sistematik değişmiyor, model için gürültüden farksız.
+  - `Temp_rectal_*` tutuldu, çünkü `Sleep_stage` ile korelasyonu ~0.52 — vücut ısısı uyku derinliğiyle gerçek bir fizyolojik ilişki taşıyor, bilgi kaybına neden olmadan model bundan faydalanabilir.
+  - Bununla ilgili makale bak. Kanıt gerekebilir.
+
+- [x] Özellik ölçekleme (StandardScaler / MinMaxScaler) — mesafe/gradyan tabanlı algoritmalar (SVM, KNN, MLP) için gerekli
+  - Çünkü öznitelikler çok farklı ölçeklerde (örn. `delta_power` ~1e-9, `Temp_rectal_mean` ~36-37) — ölçeklenmezse mesafe-tabanlı algoritmalar büyük sayılı sütunlara yanlış şekilde daha fazla önem verir. `StandardScaler` ile her sütun ortalama=0, std=1 olacak şekilde dönüştürüldü.
+
+- [?] (Opsiyonel, ileri seviye) Komşu epoch bilgisini ekleme — örn. önceki epoch'un **ham sinyal özellikleri** (etiketi değil!) yeni bir X sütunu olarak eklenebilir
+  - Şimdilik ertelendi, çünkü performansa gerçekten katkısı olup olmadığı ölçülmeden eklemek gereksiz karmaşıklık yaratabilir. Faz 5'te baseline modeller kurulduktan sonra, bu özellik eklenmiş/eklenmemiş iki versiyon karşılaştırılıp (ablation testi) sonuca göre kalıcı olarak eklenecek ya da eklenmeyecek.
+
+**Çıktı:** ✅ Model-hazır `X` (27597×32, ölçeklenmiş), `y` (27597, sınıf id 0-4), `groups` (27597, subject isimleri) matrisleri bellekte hazır.
+- `X` oluşturuldu, çünkü modelin öğreneceği tüm sayısal öznitelikleri (32 sütun) tek bir matriste topluyor.
+- `y` oluşturuldu, çünkü modelin tahmin etmeyi öğreneceği hedef — her epoch'un AASM'e göre kodlanmış sınıf numarası.
+- `groups` oluşturuldu, çünkü Faz 4'te `GroupKFold` ile **kişi bazlı** train/test ayrımı yapabilmek için hangi epoch'un hangi kişiye ait olduğunu bilmemiz gerekiyor — rastgele split yaparsak aynı kişinin epoch'ları hem train hem test'e dağılır, model kişiyi "tanır" ve test skoru yapay olarak şişer (subject leakage).
 
 ---
 
@@ -145,3 +160,8 @@ Aşağıdaki algoritmalar aynı X/y/split ile eğitilip karşılaştırılacak:
 - [ ] SC mi, ST mi, yoksa ikisi birden mi kullanılacak? (İkisi birden kullanılırsa, ilaç etkisi bir konfor değişkeni olarak ele alınabilir — ayrı bir alt analiz konusu olabilir.)
 - [ ] Kaç kişi-gece ile çalışılacak (tüm 153 kayıt mı, alt küme mi)?
 - [ ] Derin öğrenme (CNN/LSTM) kapsam dahilinde mi, yoksa klasik ML ile mi sınırlı tutulacak?
+
+
+
+Claude AI Cht Link : https://claude.ai/chat/8a5a7e91-b15b-4fd8-b7df-175f9c80e236 
+Account : hfbkacar1907@gmail.com

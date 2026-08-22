@@ -1,0 +1,22 @@
+[project]
+name = "sleepefficiency"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Hasan Kacar", email = "hkacar171@pau.edu.tr" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "numpy (>=2.5.2,<3.0.0)",
+    "pandas (>=3.0.5,<4.0.0)",
+    "joblib (>=1.5.3,<2.0.0)",
+    "scikit-learn (>=1.9.0,<2.0.0)"
+]
+
+[project.scripts]
+sleepefficiency = "sleepefficiency:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
