@@ -1,0 +1,4 @@
+yontem,leakage_var_mi,accuracy,macro_f1,cohen_kappa
+A) train_test_split (rastgele),EVET,0.9505,0.8595,0.9024
+B) GroupKFold (5-fold ortalama),HAYIR,0.9099,0.7364,0.8161
+C) GroupShuffleSplit (tek split),HAYIR,0.8905,0.7463,0.7976

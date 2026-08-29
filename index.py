@@ -120,18 +120,35 @@ print(f"\n[6] Olcekleme tamamlandi -> mean={X_scaled.mean():.4f}, std={X_scaled.
 # Ayrica dosyaya kaydetmeye gerek yok.
 
 
-# ------------------------------------------------------------------
-# 7) BIR KERELIK, DOKUMANTASYON AMACLI CSV CIKTISI
-# ------------------------------------------------------------------
-doc_df = pd.DataFrame(X_scaled, columns=feature_cols)
-doc_df["stage_id"] = y
-doc_df["stage_name"] = df["stage_aasm"].values
-doc_df["subject"] = groups
+# # ------------------------------------------------------------------
+# # 7) BIR KERELIK, DOKUMANTASYON AMACLI CSV CIKTISI
+# # ------------------------------------------------------------------
+# doc_df = pd.DataFrame(X_scaled, columns=feature_cols)
+# doc_df["stage_id"] = y
+# doc_df["stage_name"] = df["stage_aasm"].values
+# doc_df["subject"] = groups
+#
+# doc_df.to_csv(DOC_OUTPUT_CSV, index=False)
+# print(f"\n[7] Dokumantasyon amacli CSV kaydedildi: {DOC_OUTPUT_CSV} "
+#       f"({doc_df.shape[0]} satir, {doc_df.shape[1]} sutun)")
+# print("    Bu dosya sadece Faz_3 klasorune / makaleye referans icin;")
+# print("    egitim asamasinda tekrar kullanilmayacak.")
+#
+# print("\n=== Bitti ===")
 
-doc_df.to_csv(DOC_OUTPUT_CSV, index=False)
-print(f"\n[7] Dokumantasyon amacli CSV kaydedildi: {DOC_OUTPUT_CSV} "
-      f"({doc_df.shape[0]} satir, {doc_df.shape[1]} sutun)")
-print("    Bu dosya sadece Faz_3 klasorune / makaleye referans icin;")
-print("    egitim asamasinda tekrar kullanilmayacak.")
 
-print("\n=== Bitti ===")
+# ------------------------------------------------------------------
+# FAZ-4 -> Test Split
+# ------------------------------------------------------------------
+from sklearn.model_selection import GroupKFold
+
+N_SPLITS = 5
+RANDOM_STATE = 0
+
+gkf = GroupKFold(n_splits=N_SPLITS)
+fold_indices = list(gkf.split(X_scaled, y, groups))
+
+# for fold_id, (train_idx, test_idx) in enumerate(fold_indices):
+#     model.fit(X_scaled[train_idx], y[train_idx])
+#     y_pred = model.predict(X_scaled[test_idx])
+#     # evaluate_predictions(y[test_idx], y_pred)

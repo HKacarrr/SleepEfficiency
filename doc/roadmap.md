@@ -90,16 +90,27 @@ KATMAN 2 (klinik doğrulama — makaleye ek değer)
 
 ## Faz 4 — Deney Tasarımı (Train/Test Stratejisi)
 
-- [ ] **Kişi bazlı ayrım şart**: `GroupKFold` veya `GroupShuffleSplit`, grup = `subject_root`
-- [ ] Kaç fold kullanılacağına karar ver (veri miktarına göre; 5-fold önerilir)
-- [ ] Sınıf dengesizliğine karşı strateji seç: `class_weight='balanced'`, SMOTE, veya ikisinin karşılaştırması
-- [ ] Değerlendirme metriklerini belirle:
-  - **Accuracy** (referans için, ama tek başına yeterli değil)
-  - **Macro-F1** (sınıf dengesizliğine duyarlı)
-  - **Cohen's Kappa** (literatürde insan-insan uyumu ile kıyaslanabilir standart metrik)
-  - **Confusion Matrix** (hangi evreler birbirine karışıyor — örn. N1↔W, N1↔N2 sık karışan çiftlerdir)
+- [x] **Kişi bazlı ayrım şart**: `GroupKFold` seçildi, grup = `subject`
+  - 4 farklı split yöntemi karşılaştırıldı (`test_split.py`):
+    - `train_test_split` → leakage var (10/10 kişi), Macro-F1 yapay şişmiş: 0.86
+    - `GroupShuffleSplit` → leakage yok ama tek split, Macro-F1: 0.75 — tek bir kişi kombinasyonuna bağlı, güvenilirliği düşük
+    - `GroupKFold (5-fold)` → leakage yok, 5 farklı kombinasyonun ortalaması, Macro-F1: 0.74 ± 0.06 — **seçilen yöntem**
+    - `train_test_split (subject sütunu çıkarılmış)` → leakage hâlâ var, A ile birebir aynı sonuç — sorun sütun değil bölünme mantığı
+    
+- [x] Kaç fold kullanılacağına karar ver → **5-fold**
+  - 10 kişi / 5 fold = fold başına 2 kişi test'te. Daha fazla fold (örn. 10-fold) fold başına 1 kişi bırakır, tek kişinin skoru tüm fold'u domine eder; 5-fold daha dengeli.
 
-**Çıktı:** Sabit, tekrar üretilebilir (`random_state` sabitlenmiş) deney protokolü
+- [x] Sınıf dengesizliğine karşı strateji seç → **`class_weight='balanced'` (birincil)**
+  - Hesaplanan ağırlıklar: W:0.297, N1:5.492, N2:1.147, N3:4.356, REM:2.902 — az örnekli sınıflar (N1, N3) daha yüksek ağırlık alıyor.
+  - SMOTE alternatifi Faz 5'te ayrı bir karşılaştırma olarak denenecek.
+
+- [x] Değerlendirme metrikleri belirlendi:
+  - **Accuracy** — referans için tutuldu, ama sınıf dengesizliği nedeniyle tek başına yanıltıcı (W epoch'ları %67.4, her şeye "W" diyen model bile %67 alır)
+  - **Macro-F1** — asıl performans metriği; her sınıfı eşit ağırlıkla değerlendiriyor, N1 gibi az örnekli ama klinik önemli sınıfları da hesaba katıyor
+  - **Cohen's Kappa** — tesadüfi doğruluğu düzeltiyor, literatürde insan skorlayıcı uyumuyla (~0.70-0.80) kıyaslanabilir
+  - **Confusion Matrix** — hangi evreler birbirine karışıyor; N1↔W ve N1↔N2 en sık karışan çiftler olarak doğrulandı
+
+**Çıktı:** ✅ Sabit, tekrar üretilebilir deney protokolü hazır — `random_state=0`, `GroupKFold(n_splits=5)`, `class_weight='balanced'`, `evaluate_predictions()` fonksiyonu `index.py`'de tanımlı.
 
 ---
 
