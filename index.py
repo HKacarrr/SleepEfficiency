@@ -11,6 +11,6 @@ folds = Split(data).get_folds()
 
 # logistic_regression(data, folds)
 # knn(data, folds)
-# random_forest(data, folds)
+random_forest(data, folds)
 # svm(data, folds)
-xg_boost(data, folds)
+# xg_boost(data, folds)

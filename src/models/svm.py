@@ -48,8 +48,8 @@ def run(data: dict, folds: list):
     # random_state=0    : tekrar uretilebilirlik
     model = SVC(
         kernel="rbf",
-        C=1.0,
-        gamma="scale",
+        C=100.0,
+        gamma=0.001,
         class_weight="balanced",
         random_state=0,
     )
